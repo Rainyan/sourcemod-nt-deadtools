@@ -73,7 +73,7 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 	{
 		nag = NAG_ERR;
 	}
-	else if (log_minor_warning && expected_minor < DEADTOOLS_VER_MINOR)
+	else if (log_minor_warning && expected_minor > DEADTOOLS_VER_MINOR)
 	{
 		nag = NAG_WARN;
 	}
@@ -98,7 +98,7 @@ SemVer ( %s ).";
 		int msg_size = strlen(formatmsg) + strlen(caller_name) + strlen(caller_url)
 			+ strlen(callee_url) + sizeof(semver_url) - 1;
 		char[] msg = new char[msg_size];
-		Format(msg, msg_size,
+		Format(msg, msg_size, formatmsg,
 			caller_name, expected_major, expected_minor,
 			DEADTOOLS_VER_MAJOR, DEADTOOLS_VER_MINOR,
 			caller_url, callee_url, semver_url
@@ -109,9 +109,12 @@ SemVer ( %s ).";
 		}
 		else
 		{
+			// This may not stricly be an error if we don't call incompatible
+			// APIs, so just log to server instead of panicing
 			LogMessage("%s", msg);
 		}
 	}
+
 	return 0; // void
 }
 
