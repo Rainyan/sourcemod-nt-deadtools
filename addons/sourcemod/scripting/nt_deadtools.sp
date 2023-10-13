@@ -130,10 +130,6 @@ static void CheckNativeClientValidity(int client)
 
 public int DeadTools_GetClientFlags(Handle plugin, int num_params)
 {
-	char test[128];
-	GetNativeString(0, test, sizeof(test));
-	PrintToServer("Hello from \"%s\"", test);
-
 	int client = GetNativeCell(1);
 	CheckNativeClientValidity(client);
 	return _flags[client];
@@ -151,6 +147,7 @@ public any DeadTools_SetIsDownable(Handle plugin, int num_params)
 	bool enabled = GetNativeCell(2);
 	int flag = DEADTOOLS_FLAG_DOWNABLE;
 	_flags[client] = enabled ? (_flags[client] | flag) : (_flags[client] & ~flag);
+
 	return 0; // void
 }
 
