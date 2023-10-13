@@ -1,7 +1,7 @@
 # sourcemod-nt-deadtools
-SourceMod base plugin for controlling Neotokyo players' death status. Adds the ability to bring "dead"/downed players back to life.
+SourceMod plugin for Neotokyo, for controlling the player dead/alive state. This plugin adds the ability to bring "dead"/downed players back to life during the same round, for custom things like respawning or reviving players.
 
-This plugin encapsulates the respawn code, and aims to provide a clean API for calling these methods from other plugins in a modular fashion, for easier creation of custom game modes.
+This base plugin encapsulates the respawn code, and aims to provide a clean API for calling these methods from other plugins in a modular fashion, for easier creation of custom game modes.
 
 *([YouTube link](https://www.youtube.com/watch?v=ncVmKLMM7bk&list=PLtWzsvsEHmmDjrtEOYeusjBBF3eWUPD59)) Example of a custom game mode using this plugin, from the ANP 2023 Summer Skirmish showmatch:*
 <a target="_blank" href="https://www.youtube.com/watch?v=ncVmKLMM7bk&list=PLtWzsvsEHmmDjrtEOYeusjBBF3eWUPD59"><img alt="YouTube example video thumbnail" src="https://i.ytimg.com/vi/ncVmKLMM7bk/maxresdefault.jpg" width="480" /></a>
