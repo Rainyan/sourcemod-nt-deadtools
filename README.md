@@ -4,7 +4,7 @@ SourceMod base plugin for controlling Neotokyo players' death status. Adds the a
 This plugin encapsulates the respawn code, and aims to provide a clean API for calling these methods from other plugins in a modular fashion, for easier creation of custom game modes.
 
 *([YouTube link](https://www.youtube.com/watch?v=ncVmKLMM7bk&list=PLtWzsvsEHmmDjrtEOYeusjBBF3eWUPD59)) Example of a custom game mode using this plugin, from the ANP 2023 Summer Skirmish showmatch:*
-<a href="https://www.youtube.com/watch?v=ncVmKLMM7bk&list=PLtWzsvsEHmmDjrtEOYeusjBBF3eWUPD59"><img alt="YouTube example video thumbnail" src="https://i.ytimg.com/vi/ncVmKLMM7bk/maxresdefault.jpg" width="480" /></a>
+<a target="_blank" href="https://www.youtube.com/watch?v=ncVmKLMM7bk&list=PLtWzsvsEHmmDjrtEOYeusjBBF3eWUPD59"><img alt="YouTube example video thumbnail" src="https://i.ytimg.com/vi/ncVmKLMM7bk/maxresdefault.jpg" width="480" /></a>
 
 ## Outline
 
