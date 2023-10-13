@@ -63,7 +63,6 @@ public int DeadTools_GetApiVersion(Handle plugin, int num_params)
 
 public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 {
-	PrintToServer("DeadTools_VerifyApiVersion n params: %d", num_params);
 	int expected_major = GetNativeCell(1);
 	int expected_minor = GetNativeCell(2);
 	bool log_minor_warning = GetNativeCell(3);
