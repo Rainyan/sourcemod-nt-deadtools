@@ -7,7 +7,16 @@
 
 #pragma semicolon 1
 #pragma newdecls required
+
+
+//#define FLATTEN_INCLUDE_PATHS
+#if defined(FLATTEN_INCLUDE_PATHS)
+#include "nt_deadtools_shared"
+#else
+// If you're compiling using Spider or other in-browser compiler,
+// and these include paths are failing, un-comment the FLATTEN_INCLUDE_PATHS compile flag above.
 #include "nt_deadtools/nt_deadtools_shared"
+#endif
 
 
 #define PLUGIN_VERSION "1.0.0"
