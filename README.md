@@ -26,9 +26,6 @@ Please see the [API reference here](https://github.com/Rainyan/sourcemod-nt-dead
 * Compile [the plugin](addons/sourcemod/scripting), and place the .smx binary file to `addons/sourcemod/plugins`
   * You'll need to add [the include files folder](addons/sourcemod/scripting/include) to your SM compiler's include folder (typically the `include` directory inside your compiler directory), or specify the additional include directory using the `-i <path>` argument syntax.
 
-### Ability to loot weapons/ammo
-You'll need the [nt_drop plugin](https://github.com/softashell/nt-sourcemod-plugins/blob/master/scripting/nt_drop.sp), version 0.8.0 or newer. Set its cvar `sm_ntdrop_nodespawn` to value `0` (it defaults to `1`). This will allow weapons dropped in the world to de-spawn after 30 seconds, which is necessary in respawn mode to avoid spawning too many objects in the world for the engine to handle.
-
 ## Example plugins using this plugin
 * [nt_respawns](https://github.com/Rainyan/sourcemod-nt-respawns) — Adds a simple respawn mechanic for the CTG game mode.
 * Your plugin here? :smile:
