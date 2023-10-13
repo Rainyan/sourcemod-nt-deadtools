@@ -4,7 +4,11 @@
 #endif
 #define _nt_deadtools_natives_included_
 
+#if defined(FLATTEN_INCLUDE_PATHS)
+#include "nt_deadtools_shared"
+#else
 #include "nt_deadtools/nt_deadtools_shared"
+#endif
 
 
 /****
