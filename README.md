@@ -1,7 +1,7 @@
 # sourcemod-nt-deadtools
 SourceMod base plugin for controlling Neotokyo players' death status. Adds the ability to bring "dead"/downed players back to life.
 
-This plugin encapsulates the respawn code, and aims to provide a clean API for calling these methods from other plugins in a modular fashion.
+This plugin encapsulates the respawn code, and aims to provide a clean API for calling these methods from other plugins in a modular fashion, for easier creation of custom game modes.
 
 ## Outline
 
