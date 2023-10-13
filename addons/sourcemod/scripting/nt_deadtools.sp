@@ -84,7 +84,7 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 		char caller_url[256];
 		GetPluginInfo(plugin, PlInfo_URL, caller_url, sizeof(caller_url));
 		char callee_url[256];
-		GetPluginInfo(INVALID_HANDLE, PlInfo_URL, caller_url, sizeof(caller_url));
+		GetPluginInfo(INVALID_HANDLE, PlInfo_URL, callee_url, sizeof(callee_url));
 		char semver_url[] = "https://semver.org/";
 
 		char caller_name[PLATFORM_MAX_PATH];
@@ -100,7 +100,7 @@ Please consider updating this plugin (or DeadTools itself) to versions that \
 match the required pinned DeadTools API version. For more info, see the \
 project homepages of the plugin (%s), the DeadTools plugin (%s), and SemVer: \
 %s",
-			expected_major, expected_minor,
+			caller_name, expected_major, expected_minor,
 			DEADTOOLS_VER_MAJOR, DEADTOOLS_VER_MINOR,
 			caller_url, callee_url, semver_url
 		);
