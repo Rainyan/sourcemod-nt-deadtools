@@ -7,7 +7,7 @@
 #define DEADTOOLS_VER_MAJOR 1
 #define DEADTOOLS_VER_MINOR 0
 
-/// NT_RESPAWNS bit flags
+/// NT_DEADTOOLS bit flags
 ///
 // Client is "downed". This is a special state used by nt_respawns to place
 // the player in limbo between being fully dead or alive.
