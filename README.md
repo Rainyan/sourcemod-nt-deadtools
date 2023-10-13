@@ -12,7 +12,7 @@ If you just want to enable the respawns on your NT server, follow the installati
 Please see the [API reference here](https://github.com/Rainyan/sourcemod-nt-deadtools/blob/main/addons/sourcemod/scripting/include/nt_deadtools/nt_deadtools_natives.inc). If you need more example code, check out [the example plugins list](#example-plugins-using-this-plugin).
 
 ## Build requirements
-* SourceMod 1.8 or newer
+* SourceMod 1.8 or newer <!-- TODO: SM 1.7.3 compiles successfully, but can we support it?? -->
   * **If using SourceMod older than 1.11**: you also need [the DHooks extension](https://forums.alliedmods.net/showpost.php?p=2588686). Download links are at the bottom of the opening post of the AlliedMods thread. Be sure to choose the correct one for your SM version! You don't need this if you're using SourceMod 1.11 or newer.
 * [Neotokyo include](https://github.com/softashell/sourcemod-nt-include), version 1.0 or newer
 
