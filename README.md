@@ -22,7 +22,7 @@ Please see the [API reference here](https://github.com/Rainyan/sourcemod-nt-dead
 ## Installation
 * Place [the gamedata file](addons/sourcemod/gamedata/neotokyo/) to the `addons/sourcemod/gamedata/neotokyo` folder (create the "neotokyo" folder if it doesn't exist).
 > [!IMPORTANT]  
-> Note that the DeadTools include folder structure should look like `<...>/include/nt_deadtools/nt_deadtools_<thing>.inc`, and **not** `<...>/include/nt_deadtools_<thing>.inc`, lacking the "nt_deadtools" folder inside "include".
+> Note that the DeadTools include folder structure should look like `<...>/include/nt_deadtools/nt_deadtools_<thing>.inc`, and **not** `<...>/include/nt_deadtools_<thing>.inc`, the incorrect path lacking the "nt_deadtools" folder inside "include".
 * Compile [the plugin](addons/sourcemod/scripting), and place the .smx binary file to `addons/sourcemod/plugins`
   * You'll need to add [the include files folder](addons/sourcemod/scripting/include) to your SM compiler's include folder (typically the `include` directory inside your compiler directory), or specify the additional include directory using the `-i <path>` argument syntax.
 
