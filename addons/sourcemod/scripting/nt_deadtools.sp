@@ -142,7 +142,7 @@ stock int ToggleBitFlag(int flags, int flag, bool enabled)
 	return enabled ? flags | flag : flags & ~flag;
 }
 
-public any DeadTools_SetIsDownable(Handle plugin, int num_params)
+public int DeadTools_SetIsDownable(Handle plugin, int num_params)
 {
 	int client = GetNativeCell(1);
 	CheckNativeClientValidity(client);
@@ -153,7 +153,7 @@ public any DeadTools_SetIsDownable(Handle plugin, int num_params)
 	return 0; // void
 }
 
-public any DeadTools_Revive(Handle plugin, int num_params)
+public int DeadTools_Revive(Handle plugin, int num_params)
 {
 	int client = GetNativeCell(1);
 	CheckNativeClientValidity(client);
