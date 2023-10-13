@@ -21,6 +21,7 @@ native int DeadTools_GetApiVersion(int& minor=0);
     * Convenience function that throws a NativeError with help message
     * if the expected DeadTools MAJOR version mismatches what the server
     * is currently running.
+    * Recommended to be called once, inside the OnAllPluginsLoaded forward.
     *
     * @param    int             Expected SemVer MAJOR version.
     *                           Defaults to the value in nt_deadtools_shared.
