@@ -57,10 +57,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public int DeadTools_GetApiVersion(Handle plugin, int num_params)
 {
-	if (num_params > 1) // optional by-ref
-	{
-		SetNativeCellRef(2, DEADTOOLS_VER_MINOR);
-	}
+	SetNativeCellRef(2, DEADTOOLS_VER_MINOR);
 	return DEADTOOLS_VER_MAJOR;
 }
 
@@ -115,8 +112,6 @@ project homepages of this plugin (%s), the DeadTools plugin (%s), and SemVer: \
 	return 0; // void
 }
 
-// For a client index, checks whether it is inside valid client index range,
-// and whether that client is in game, and throws a NativeError if not.
 static void CheckNativeClientValidity(int client)
 {
 	if (client < 1 || client > MaxClients)

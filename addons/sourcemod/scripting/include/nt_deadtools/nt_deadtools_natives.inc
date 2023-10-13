@@ -15,7 +15,7 @@
     * @param    int             Optional SemVer MINOR version by reference.
     * @return   int             SemVer MAJOR version.
 ****/
-native int DeadTools_GetApiVersion();
+native int DeadTools_GetApiVersion(int& minor=0);
 
 /****
     * Convenience function that throws a NativeError with help message
