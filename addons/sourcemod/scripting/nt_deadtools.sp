@@ -90,7 +90,7 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 		char caller_name[PLATFORM_MAX_PATH];
 		GetPluginInfo(plugin, PlInfo_Name, caller_name, sizeof(caller_name));
 
-		int msg_size = 346 + strlen(caller_name) + strlen(caller_url)
+		int msg_size = 373 + strlen(caller_name) + strlen(caller_url)
 			+ strlen(callee_url) + sizeof(semver_url) - 1;
 		char[] msg = new char[msg_size];
 		// Remember to update the msg_size above if modifying this.
@@ -98,8 +98,8 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 API version %d.%d but the server DeadTools is running API version %d.%d. \
 Please consider updating this plugin (or DeadTools itself) to versions that \
 match the required pinned DeadTools API version. For more info, see the \
-project homepages of the plugin (%s), the DeadTools plugin (%s), and SemVer: \
-%s",
+project homepages of the plugin ( %s ), the DeadTools plugin ( %s ), and \
+SemVer ( %s ).",
 			caller_name, expected_major, expected_minor,
 			DEADTOOLS_VER_MAJOR, DEADTOOLS_VER_MINOR,
 			caller_url, callee_url, semver_url
