@@ -31,3 +31,4 @@ You'll need the [nt_drop plugin](https://github.com/softashell/nt-sourcemod-plug
 
 ## Example plugins using this plugin
 * [nt_respawns](https://github.com/Rainyan/sourcemod-nt-respawns) — Adds a simple respawn mechanic for the CTG game mode.
+* Your plugin here? :smile:
