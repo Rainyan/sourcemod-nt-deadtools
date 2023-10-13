@@ -19,7 +19,7 @@
 #endif
 
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "2.0.0"
 
 #define LIFE_ALIVE 0
 #define OBS_MODE_NONE 0
@@ -27,24 +27,11 @@
 #define TRAIN_NEW 0xc0
 #define SOLID_BBOX 2
 #define EF_NODRAW 0x020
+#define SF_NORESPAWN (1 << 30)
 
-#if SOURCEMOD_V_MAJOR > 1
-#define SUPPORTS_DROP_BYPASSHOOKS
-#endif
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR > 12
-#define SUPPORTS_DROP_BYPASSHOOKS
-#endif
-#if SOURCEMOD_V_MAJOR == 1 && SOURCEMOD_V_MINOR == 12 && SOURCEMOD_V_REV >= 6961
-#define SUPPORTS_DROP_BYPASSHOOKS
-#endif
-
-#if !defined(SUPPORTS_DROP_BYPASSHOOKS)
 static Handle g_hForwardDrop = INVALID_HANDLE;
-#endif
-
-ConVar g_cNoWeaponsDespawn;
-
-int _flags[NEO_MAXPLAYERS + 1];
+static int _flags[NEO_MAXPLAYERS + 1];
+static bool _is_reviving;
 
 public Plugin myinfo = {
 	name = "NT DeadTools",
@@ -190,14 +177,13 @@ void InitGameData()
 	{
 		SetFailState("Failed to detour");
 	}
+	delete dd;
 	CloseHandle(gd);
 }
 
 public void OnAllPluginsLoaded()
 {
 	InitGameData();
-
-	g_cNoWeaponsDespawn = FindConVar("sm_ntdrop_nodespawn");
 
 #if !defined(SUPPORTS_DROP_BYPASSHOOKS)
 	g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
@@ -226,6 +212,18 @@ public void OnEntityCreated(int entity, const char[] classname)
 {
 	if (!IsValidEdict(entity))
 	{
+		return;
+	}
+
+	if (StrContains(classname, "weapon_") != 0)
+	{
+		return;
+	}
+
+	// The player revive spawns some weapon copies that we clean up here.
+	if (_is_reviving)
+	{
+		AcceptEntityInput(entity, "Kill");
 		return;
 	}
 
@@ -299,18 +297,49 @@ public Action OnWeaponTouch(int entity, int other)
 
 void DropWeapon(int client, int weapon)
 {
-// For versions of SM that don't support reporting the weapon drop via the call,
-// we need to manually call the nt_ghostdrop forward.
-// This is kind of nasty but necessary for other plugins that rely on this info.
-#if defined(SUPPORTS_DROP_BYPASSHOOKS)
-	SDKHooks_DropWeapon(client, weapon, NULL_VECTOR, NULL_VECTOR, false);
-#else
 	SDKHooks_DropWeapon(client, weapon, NULL_VECTOR, NULL_VECTOR);
+	// We need to bypass default drop hooks here to avoid interference,
+	// so calling only the ghost drop specifically for plugins that rely on it.
+	if (IsWeaponGhost(weapon))
+	{
+		Call_StartForward(g_hForwardDrop);
+		Call_PushCell(client);
+		Call_Finish();
+	}
+	else
+	{
+		// Because SDKHooks drop bypasses this NT flag
+		SetEntProp(weapon, Prop_Data, "m_spawnflags",
+			GetEntProp(weapon, Prop_Data, "m_spawnflags") | SF_NORESPAWN
+		);
+	}
+}
 
-	Call_StartForward(g_hForwardDrop);
-	Call_PushCell(client);
-	Call_Finish();
-#endif
+// Assumes weapon input to always be a valid NT wep index,
+// or -1 for invalid weapon.
+bool IsWeaponGhost(int weapon)
+{
+	if (weapon == -1)
+	{
+		return false;
+	}
+
+	// "weapon_gh" + '\0' == strlen 10.
+	// We assume any non -1 ent index we get is always
+	// a valid NT weapon ent index.
+	char wepName[9 + 1];
+	if (!GetEntityClassname(weapon, wepName, sizeof(wepName)))
+	{
+		return false;
+	}
+
+	// weapon_gHost -- only weapon with letter H on 8th position of its name.
+	return wepName[8] == 'h';
+}
+
+public MRESReturn CBaseCombatWeapon__Respawn(int pThis, DHookReturn hReturn)
+{
+	return MRES_Ignored;
 }
 
 public MRESReturn PlayerKilled(int client, DHookReturn hReturn, DHookParam hParams)
@@ -341,44 +370,13 @@ public MRESReturn PlayerKilled(int client, DHookReturn hReturn, DHookParam hPara
 
 	SetInvisible(client, true);
 
-	// If the cvar is null, we're probably running an older version of the
-	// plugin which doesn't have this control exposed.
-	// TODO: should then ideally detect whether the plugin is actually running
-	bool must_kill_weps = ((g_cNoWeaponsDespawn == null) ||
-		g_cNoWeaponsDespawn.BoolValue);
-
 	// Need to strip guns because the player's attachments will remain visible,
 	// (or alternatively need to drop them in the world).
 	int weps_size = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
-	char classname[12 + 1];
 	for (int i = 0; i < weps_size; ++i)
 	{
 		int weapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
-		if (weapon == -1)
-		{
-			continue;
-		}
-
-		if (must_kill_weps)
-		{
-			if (!GetEntityClassname(weapon, classname, sizeof(classname)))
-			{
-				continue;
-			}
-
-			// Don't destroy the ghost; instead drop it to the world
-			if (StrEqual(classname, "weapon_ghost"))
-			{
-				DropWeapon(client, weapon);
-				continue;
-			}
-			// Because most servers run plugins for weapons that never de-spawn,
-			// explicitly destroy our guns to avoid overflowing the entity limit
-			// for extended gameplay.
-			RemovePlayerItem(client, weapon);
-			RemoveEdict(weapon);
-		}
-		else
+		if (weapon != -1)
 		{
 			DropWeapon(client, weapon);
 		}
@@ -476,6 +474,7 @@ static void Revive(int client)
 		ThrowError("Client %d was not down", client);
 	}
 
+	_is_reviving = true;
 	// Places the NT player in the world
 	// TODO: figure out what this is
 	static Handle call = INVALID_HANDLE;
@@ -489,10 +488,11 @@ static void Revive(int client)
 		call = EndPrepSDKCall();
 		if (call == INVALID_HANDLE)
 		{
-			ThrowError("Failed to prepare SDK call");
+			SetFailState("Failed to prepare SDK call");
 		}
 	}
 	SDKCall(call, client);
+	_is_reviving = false;
 
 	SetEntProp(client, Prop_Send, "m_iObserverMode", OBS_MODE_NONE);
 	SetEntProp(client, Prop_Send, "m_iHealth", 100);
@@ -527,12 +527,12 @@ static void Revive(int client)
 	SetEntityFlags(client, GetEntityFlags(client) & ~FL_GODMODE);
 	ChangeEdictState(client, 0);
 
-	GivePlayerEquipment(client);
+	GivePlayerPrimaryWep(client);
 
 	_flags[client] &= ~DEADTOOLS_FLAG_DOWN;
 }
 
-static void GivePlayerEquipment(int client)
+static void GivePlayerPrimaryWep(int client)
 {
 	static Handle call = INVALID_HANDLE;
 	if (call == INVALID_HANDLE)
