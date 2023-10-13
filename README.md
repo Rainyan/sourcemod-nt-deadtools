@@ -9,7 +9,7 @@ This base plugin encapsulates the respawn code, and aims to provide a clean API 
 ## Outline
 
 ### For server operators
-If you just want to enable the respawns on your NT server, follow the installation instructions of this base plugin, and then install the desired respawns plugin from the [list of example plugins](#example-plugins-using-this-plugin).
+If you just want to enable the basic respawns feature on your NT server, follow the installation instructions of this base plugin, and then install the desired respawns plugin from the [list of example plugins](#example-plugins-using-this-plugin).
 
 ### For plugin developers
 Please see the [API reference here](https://github.com/Rainyan/sourcemod-nt-deadtools/blob/main/addons/sourcemod/scripting/include/nt_deadtools/nt_deadtools_natives.inc). If you need more example code, check out [the example plugins list](#example-plugins-using-this-plugin).
