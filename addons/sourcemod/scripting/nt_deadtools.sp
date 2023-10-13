@@ -90,7 +90,7 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 		char caller_name[PLATFORM_MAX_PATH];
 		GetPluginInfo(plugin, PlInfo_Name, caller_name, sizeof(caller_name));
 
-		int msg_size = 373 + strlen(caller_name) + strlen(caller_url)
+		int msg_size = 358 + strlen(caller_name) + strlen(caller_url)
 			+ strlen(callee_url) + sizeof(semver_url) - 1;
 		char[] msg = new char[msg_size];
 		// Remember to update the msg_size above if modifying this.
