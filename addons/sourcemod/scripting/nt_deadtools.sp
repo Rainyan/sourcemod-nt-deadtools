@@ -88,7 +88,7 @@ public int DeadTools_VerifyApiVersion(Handle plugin, int num_params)
 		char semver_url[] = "https://semver.org/";
 
 		char caller_name[PLATFORM_MAX_PATH];
-		GetPluginInfo(INVALID_HANDLE, PlInfo_Name, caller_name, sizeof(caller_name));
+		GetPluginInfo(plugin, PlInfo_Name, caller_name, sizeof(caller_name));
 
 		int msg_size = 346 + strlen(caller_name) + strlen(caller_url)
 			+ strlen(callee_url) + sizeof(semver_url) - 1;
