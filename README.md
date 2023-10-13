@@ -19,6 +19,7 @@ Please see the [API reference here](https://github.com/Rainyan/sourcemod-nt-dead
 ## Installation
 * Place [the gamedata file](addons/sourcemod/gamedata/neotokyo/) to the `addons/sourcemod/gamedata/neotokyo` folder (create the "neotokyo" folder if it doesn't exist).
 * Compile [the plugin](addons/sourcemod/scripting), and place the .smx binary file to `addons/sourcemod/plugins`
+  * You'll need to add [the include files folder](addons/sourcemod/scripting/include) to your SM compiler's include folder (typically the `include` directory inside your compiler directory), or specify the additional include directory using the `-i <path>` argument syntax.
 
 ## Example plugins using this plugin
 * [nt_respawns](https://github.com/Rainyan/sourcemod-nt-respawns) — Adds a simple respawn mechanic for the CTG game mode.
