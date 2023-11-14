@@ -41,6 +41,29 @@ native void DeadTools_VerifyApiVersion(int expected_major=DEADTOOLS_VER_MAJOR,
     bool log_minor_warning=true);
 
 /****
+    * Register the calling plugin to use DeadTools.
+    * A plugin intending to call any DeadTools natives is required to first
+    * call this native one time, with the exception of the following natives:
+    * DeadTools_GetApiVersion, DeadTools_VerifyApiVersion.
+    *
+    * @throws   NativeError     Throws if registering the same plugin multiple
+                                times.
+****/
+native void DeadTools_RegisterPlugin();
+
+/****
+    * Unregister the calling plugin from using DeadTools.
+    * This is only required to be called by plugins that have previously called
+    * the native DeadTools_RegisterPlugin, and then wish to unregister that
+    * DeadTools association state without unloading that calling plugin; a
+    * plugin that has called DeadTools_RegisterPlugin will be automatically
+    * unregistered when it unloads.
+    * Calling this native when the calling plugin is not registered by a
+    * prior call to the DeadTools_RegisterPlugin native is a no-op.
+****/
+native void DeadTools_UnregisterPlugin();
+
+/****
     * Return nt_deadtools state bit flags for a client.
     * See the "DEADTOOLS_FLAG..." defines for details.
     *
