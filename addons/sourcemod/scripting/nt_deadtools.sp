@@ -225,8 +225,9 @@ static void AddFlag(Handle plugin, const int[] clients, int n_clients,
 				}
 			}
 		}
-		break;
+		return;
 	}
+	ThrowNativeError(1, "Plugin is not registered for DeadTools");
 }
 
 static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
@@ -239,6 +240,7 @@ static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
 	int n_plugins = _plugins.Length;
 	any bits[DT_BLOCKSIZE];
 	bool clear_global_flags = true;
+	bool found_plugin;
 	for (int i = 0; i < n_plugins; ++i)
 	{
 		_plugins.GetArray(i, bits);
@@ -246,6 +248,8 @@ static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
 		{
 			continue;
 		}
+		found_plugin = true;
+
 		for (int j = 0; j < n_clients; ++j)
 		{
 			if (bits[clients[j] - 1] & flag)
@@ -266,6 +270,10 @@ static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
 		{
 			_flags[clients[j]] &= ~flag;
 		}
+	}
+	if (!found_plugin)
+	{
+		ThrowNativeError(1, "Plugin is not registered for DeadTools");
 	}
 }
 

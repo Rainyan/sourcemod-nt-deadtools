@@ -45,9 +45,12 @@ native void DeadTools_VerifyApiVersion(int expected_major=DEADTOOLS_VER_MAJOR,
     * A plugin intending to call any DeadTools natives is required to first
     * call this native one time, with the exception of the following natives:
     * DeadTools_GetApiVersion, DeadTools_VerifyApiVersion.
+    * Calling any other DeadTools natives without having registered the calling
+    * plugin by calling this native is unspecified behaviour, and may throw an
+    * error.
     *
-    * @throws   NativeError     Throws if registering the same plugin multiple
-                                times.
+    * @throws   NativeError     Throws if called multiple times by the same
+    *                           caller.
 ****/
 native void DeadTools_RegisterPlugin();
 
