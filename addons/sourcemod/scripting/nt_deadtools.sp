@@ -19,7 +19,7 @@
 #endif
 
 
-#define PLUGIN_VERSION "2.0.0"
+#define PLUGIN_VERSION "3.0.0"
 
 #define LIFE_ALIVE 0
 #define OBS_MODE_NONE 0
@@ -33,6 +33,11 @@ static Handle g_hForwardDrop = INVALID_HANDLE;
 static int _flags[NEO_MAXPLAYERS + 1];
 static bool _is_reviving;
 
+ArrayList _plugins = null;
+
+// Plugin handle + bit flags for each player
+#define DT_BLOCKSIZE (1 + NEO_MAXPLAYERS)
+
 public Plugin myinfo = {
 	name = "NT DeadTools",
 	description = "Base plugin for managing player death status for Neotokyo",
@@ -43,12 +48,61 @@ public Plugin myinfo = {
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	CreateNative("DeadTools_RegisterPlugin", DeadTools_RegisterPlugin);
+	CreateNative("DeadTools_UnregisterPlugin", DeadTools_UnregisterPlugin);
 	CreateNative("DeadTools_GetApiVersion", DeadTools_GetApiVersion);
 	CreateNative("DeadTools_VerifyApiVersion", DeadTools_VerifyApiVersion);
 	CreateNative("DeadTools_GetClientFlags", DeadTools_GetClientFlags);
 	CreateNative("DeadTools_SetIsDownable", DeadTools_SetIsDownable);
 	CreateNative("DeadTools_Revive", DeadTools_Revive);
 	return APLRes_Success;
+}
+
+public void OnPluginStart()
+{
+	_plugins = new ArrayList(DT_BLOCKSIZE, 1);
+}
+
+public void OnAllPluginsLoaded()
+{
+	InitGameData();
+
+#if !defined(SUPPORTS_DROP_BYPASSHOOKS)
+	g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
+#endif
+
+	if (!HookEventEx("game_round_start", OnRoundStart))
+	{
+		SetFailState("Failed to hook event");
+	}
+}
+
+public int DeadTools_RegisterPlugin(Handle plugin, int num_params)
+{
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) == plugin)
+		{
+			ThrowNativeError(1, "Plugin is already registered");
+		}
+	}
+	_plugins.Push(plugin);
+	return 0; // void
+}
+
+public int DeadTools_UnregisterPlugin(Handle plugin, int num_params)
+{
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) == plugin)
+		{
+			_plugins.Erase(i);
+			break;
+		}
+	}
+	return 0; // void
 }
 
 public int DeadTools_GetApiVersion(Handle plugin, int num_params)
@@ -138,14 +192,98 @@ stock int ToggleBitFlag(int flags, int flag, bool enabled)
 	return enabled ? flags | flag : flags & ~flag;
 }
 
+static void AddFlag(Handle plugin, const int[] clients, int n_clients,
+	int flag)
+{
+	if (n_clients == 0)
+	{
+		return;
+	}
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) != plugin && plugin != INVALID_HANDLE)
+		{
+			continue;
+		}
+
+		for (int j = 0; j < n_clients; ++j)
+		{
+			// Total flags of all DeadTools plugins, for fast reading
+			_flags[clients[j]] |= flag;
+
+			if (plugin != INVALID_HANDLE)
+			{
+				// Store the bits to plugin-specific container,
+				// so we can keep track of which plugin wants which flags.
+				any bits[DT_BLOCKSIZE];
+				_plugins.GetArray(i, bits);
+				if (!(bits[clients[j] - 1] & flag))
+				{
+					bits[clients[j] - 1] |= flag;
+					_plugins.SetArray(i, bits);
+				}
+			}
+		}
+		break;
+	}
+}
+
+static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
+	int flag)
+{
+	if (n_clients == 0)
+	{
+		return;
+	}
+	int n_plugins = _plugins.Length;
+	any bits[DT_BLOCKSIZE];
+	bool clear_global_flags = true;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		_plugins.GetArray(i, bits);
+		for (int j = 0; j < n_clients; ++j)
+		{
+			if (bits[clients[j] - 1] & flag)
+			{
+				if (bits[0] == plugin)
+				{
+					bits[clients[j] - 1] &= ~flag;
+					_plugins.SetArray(i, bits);
+					clear_global_flags = false;
+					break;
+				}
+			}
+		}
+		if (!clear_global_flags)
+		{
+			return;
+		}
+	}
+	if (clear_global_flags)
+	{
+		for (int j = 0; j < n_clients; ++j)
+		{
+			_flags[clients[j]] &= ~flag;
+		}
+	}
+}
+
 public int DeadTools_SetIsDownable(Handle plugin, int num_params)
 {
-	int client = GetNativeCell(1);
-	CheckNativeClientValidity(client);
+	int clients[1];
+	clients[0] = GetNativeCell(1);
+	CheckNativeClientValidity(clients[0]);
 	bool enabled = GetNativeCell(2);
 	int flag = DEADTOOLS_FLAG_DOWNABLE;
-	_flags[client] = enabled ? (_flags[client] | flag) : (_flags[client] & ~flag);
-
+	if (enabled)
+	{
+		AddFlag(plugin, clients, sizeof(clients), flag);
+	}
+	else
+	{
+		ClearFlag(plugin, clients, sizeof(clients), flag);
+	}
 	return 0; // void
 }
 
@@ -181,31 +319,25 @@ void InitGameData()
 	CloseHandle(gd);
 }
 
-public void OnAllPluginsLoaded()
-{
-	InitGameData();
-
-#if !defined(SUPPORTS_DROP_BYPASSHOOKS)
-	g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
-#endif
-
-	if (!HookEventEx("game_round_start", OnRoundStart))
-	{
-		SetFailState("Failed to hook event");
-	}
-}
-
 public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
+	int clients[NEO_MAXPLAYERS];
+	int n;
 	for (int client = 1; client <= MaxClients; ++client)
 	{
-		_flags[client] &= ~DEADTOOLS_FLAG_DOWN;
+		if (IsClientInGame(client) && !IsFakeClient(client))
+		{
+			clients[n++] = client;
+		}
 	}
+	ClearFlag(INVALID_HANDLE, clients, n, DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnClientDisconnect_Post(int client)
 {
-	_flags[client] &= ~DEADTOOLS_FLAG_DOWN;
+	int clients[1];
+	clients[0] = client;
+	ClearFlag(INVALID_HANDLE, clients, sizeof(clients), DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
