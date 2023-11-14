@@ -78,8 +78,9 @@ native int DeadTools_GetClientFlags(int client);
 
 /**
   * Set whether a client can be "downed".
-  * Downed is a special nt_deadtools state where the player feigns dead, but
-  * can be potentially revived by another plugin calling DeadTools_Revive.
+  * Downed is a special DeadTools state where the player feigns dead, but
+  * can be potentially revived by an extrenal plugin, by calling the native
+  * DeadTools_Revive.
   *
   * @param    client          Client index.
   * @param    downable        Whether client can be downed.
