@@ -242,21 +242,21 @@ static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
 	for (int i = 0; i < n_plugins; ++i)
 	{
 		_plugins.GetArray(i, bits);
+		if (bits[0] != plugin)
+		{
+			continue;
+		}
 		for (int j = 0; j < n_clients; ++j)
 		{
 			if (bits[clients[j] - 1] & flag)
 			{
-				if (bits[0] == plugin)
-				{
-					bits[clients[j] - 1] &= ~flag;
-					_plugins.SetArray(i, bits);
-					clear_global_flags = false;
-					break;
-				}
+				bits[clients[j] - 1] &= ~flag;
+				clear_global_flags = false;
 			}
 		}
 		if (!clear_global_flags)
 		{
+			_plugins.SetArray(i, bits);
 			return;
 		}
 	}
