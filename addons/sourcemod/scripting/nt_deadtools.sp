@@ -207,6 +207,7 @@ static void AddFlag(Handle plugin, const int[] clients, int n_clients,
 			continue;
 		}
 
+		any bits[DT_BLOCKSIZE];
 		for (int j = 0; j < n_clients; ++j)
 		{
 			// Total flags of all DeadTools plugins, for fast reading
@@ -216,7 +217,6 @@ static void AddFlag(Handle plugin, const int[] clients, int n_clients,
 			{
 				// Store the bits to plugin-specific container,
 				// so we can keep track of which plugin wants which flags.
-				any bits[DT_BLOCKSIZE];
 				_plugins.GetArray(i, bits);
 				if (!(bits[clients[j] - 1] & flag))
 				{
