@@ -39,7 +39,7 @@ native int DeadTools_GetApiVersion(int& minor=0);
   * @throws   NativeError       If API version violates SemVer.
 **/
 native void DeadTools_VerifyApiVersion(int expected_major=DEADTOOLS_VER_MAJOR,
-        int expected_minor=DEADTOOLS_VER_MINOR, bool log_minor_warning=true);
+    int expected_minor=DEADTOOLS_VER_MINOR, bool log_minor_warning=true);
 
 /**
   * Register the calling plugin to use DeadTools.
