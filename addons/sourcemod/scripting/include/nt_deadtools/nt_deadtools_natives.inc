@@ -15,6 +15,8 @@
   * Returns the nt_deadtools plugin natives API version.
   * The version number follows Semantic Versioning MAJOR.MINOR scheme,
   * except for the PATCH version being unused.
+  * Consider calling DeadTools_VerifyApiVersion instead, unless you need to
+  * know the exact API version.
   *
   * @param[out]    minor      Optional SemVer MINOR version by reference.
   * @return                   SemVer MAJOR version.
@@ -22,9 +24,9 @@
 native int DeadTools_GetApiVersion(int& minor=0);
 
 /**
-  * Convenience function that throws a NativeError with help message
-  * if the expected DeadTools MAJOR version mismatches what the server
-  * is currently running.
+  * Convenience function that wraps DeadTools_GetApiVersion, and throws a
+  * NativeError with a help message if the expected DeadTools MAJOR version
+  * mismatches what the server is currently running.
   * Recommended to be called once, inside the OnAllPluginsLoaded forward.
   *
   * @param    expected_major    Expected SemVer MAJOR version.
@@ -32,13 +34,12 @@ native int DeadTools_GetApiVersion(int& minor=0);
   * @param    expected_minor    Expected SemVer MINOR version.
   *                             Defaults to the value in nt_deadtools_shared.
   * @param    log_minor_warning Whether to print a non-error warning to server
-  *                             log on MINOR version violation. Defaults to
+  *                             log on MINOR version mismatch. Defaults to
   *                             true.
   * @throws   NativeError       If API version violates SemVer.
 **/
 native void DeadTools_VerifyApiVersion(int expected_major=DEADTOOLS_VER_MAJOR,
-        expected_minor=DEADTOOLS_VER_MINOR,
-         log_minor_warning=true);
+        int expected_minor=DEADTOOLS_VER_MINOR, bool log_minor_warning=true);
 
 /**
   * Register the calling plugin to use DeadTools.
