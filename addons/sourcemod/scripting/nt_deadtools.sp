@@ -192,8 +192,8 @@ stock int ToggleBitFlag(int flags, int flag, bool enabled)
 	return enabled ? flags | flag : flags & ~flag;
 }
 
-static void AddFlag(Handle plugin, const int[] clients, int n_clients,
-	int flag)
+static void AddFlag(const int[] clients, int n_clients, int flag,
+	Handle plugin=INVALID_HANDLE)
 {
 	if (n_clients == 0)
 	{
@@ -230,8 +230,8 @@ static void AddFlag(Handle plugin, const int[] clients, int n_clients,
 	ThrowNativeError(1, "Plugin is not registered for DeadTools");
 }
 
-static void ClearFlag(Handle plugin, const int[] clients, int n_clients,
-	int flag)
+static void ClearFlag(const int[] clients, int n_clients, int flag,
+	Handle plugin=INVALID_HANDLE)
 {
 	if (n_clients == 0)
 	{
@@ -286,11 +286,11 @@ public int DeadTools_SetIsDownable(Handle plugin, int num_params)
 	int flag = DEADTOOLS_FLAG_DOWNABLE;
 	if (enabled)
 	{
-		AddFlag(plugin, clients, sizeof(clients), flag);
+		AddFlag(clients, sizeof(clients), flag, plugin);
 	}
 	else
 	{
-		ClearFlag(plugin, clients, sizeof(clients), flag);
+		ClearFlag(clients, sizeof(clients), flag, plugin);
 	}
 	return 0; // void
 }
@@ -338,14 +338,14 @@ public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			clients[n++] = client;
 		}
 	}
-	ClearFlag(INVALID_HANDLE, clients, n, DEADTOOLS_FLAG_DOWN);
+	ClearFlag(clients, n, DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnClientDisconnect_Post(int client)
 {
 	int clients[1];
 	clients[0] = client;
-	ClearFlag(INVALID_HANDLE, clients, sizeof(clients), DEADTOOLS_FLAG_DOWN);
+	ClearFlag(clients, sizeof(clients), DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
