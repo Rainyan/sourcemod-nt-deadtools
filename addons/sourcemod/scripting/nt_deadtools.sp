@@ -21,13 +21,6 @@
 
 #define PLUGIN_VERSION "3.0.0"
 
-#define LIFE_ALIVE 0
-#define OBS_MODE_NONE 0
-#define DAMAGE_YES 2
-#define TRAIN_NEW 0xc0
-#define SOLID_BBOX 2
-#define EF_NODRAW 0x020
-#define SF_NORESPAWN (1 << 30)
 
 static Handle g_hForwardDrop = INVALID_HANDLE;
 static int _flags[NEO_MAXPLAYERS + 1];
@@ -448,6 +441,7 @@ void DropWeapon(int client, int weapon)
 	}
 	else
 	{
+#define SF_NORESPAWN (1 << 30)
 		// Because SDKHooks drop bypasses this NT flag
 		SetEntProp(weapon, Prop_Data, "m_spawnflags",
 			GetEntProp(weapon, Prop_Data, "m_spawnflags") | SF_NORESPAWN
@@ -595,6 +589,7 @@ public MRESReturn PlayerKilled(int client, DHookReturn hReturn, DHookParam hPara
 
 void SetInvisible(int client, bool is_invisible)
 {
+#define EF_NODRAW 0x20
 	if (is_invisible)
 	{
 		SetEntProp(client, Prop_Send, "m_fEffects",
@@ -634,6 +629,11 @@ static void Revive(int client)
 	SDKCall(call, client);
 	_is_reviving = false;
 
+#define LIFE_ALIVE 0
+#define OBS_MODE_NONE 0
+#define DAMAGE_YES 2
+#define TRAIN_NEW 0xc0
+#define SOLID_BBOX 2
 	SetEntProp(client, Prop_Send, "m_iObserverMode", OBS_MODE_NONE);
 	SetEntProp(client, Prop_Send, "m_iHealth", 100);
 	SetEntProp(client, Prop_Send, "m_lifeState", LIFE_ALIVE);
