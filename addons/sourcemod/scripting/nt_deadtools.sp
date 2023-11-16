@@ -19,19 +19,17 @@
 #endif
 
 
-#define PLUGIN_VERSION "2.0.0"
+#define PLUGIN_VERSION "3.0.0"
 
-#define LIFE_ALIVE 0
-#define OBS_MODE_NONE 0
-#define DAMAGE_YES 2
-#define TRAIN_NEW 0xc0
-#define SOLID_BBOX 2
-#define EF_NODRAW 0x020
-#define SF_NORESPAWN (1 << 30)
 
 static Handle g_hForwardDrop = INVALID_HANDLE;
 static int _flags[NEO_MAXPLAYERS + 1];
 static bool _is_reviving;
+
+ArrayList _plugins = null;
+
+// Plugin handle + bit flags for each player
+#define DT_BLOCKSIZE (1 + NEO_MAXPLAYERS)
 
 public Plugin myinfo = {
 	name = "NT DeadTools",
@@ -43,12 +41,61 @@ public Plugin myinfo = {
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	CreateNative("DeadTools_RegisterPlugin", DeadTools_RegisterPlugin);
+	CreateNative("DeadTools_UnregisterPlugin", DeadTools_UnregisterPlugin);
 	CreateNative("DeadTools_GetApiVersion", DeadTools_GetApiVersion);
 	CreateNative("DeadTools_VerifyApiVersion", DeadTools_VerifyApiVersion);
 	CreateNative("DeadTools_GetClientFlags", DeadTools_GetClientFlags);
 	CreateNative("DeadTools_SetIsDownable", DeadTools_SetIsDownable);
 	CreateNative("DeadTools_Revive", DeadTools_Revive);
 	return APLRes_Success;
+}
+
+public void OnPluginStart()
+{
+	_plugins = new ArrayList(DT_BLOCKSIZE, 1);
+}
+
+public void OnAllPluginsLoaded()
+{
+	InitGameData();
+
+#if !defined(SUPPORTS_DROP_BYPASSHOOKS)
+	g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
+#endif
+
+	if (!HookEventEx("game_round_start", OnRoundStart))
+	{
+		SetFailState("Failed to hook event");
+	}
+}
+
+public int DeadTools_RegisterPlugin(Handle plugin, int num_params)
+{
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) == plugin)
+		{
+			ThrowNativeError(1, "Plugin is already registered");
+		}
+	}
+	_plugins.Push(plugin);
+	return 0; // void
+}
+
+public int DeadTools_UnregisterPlugin(Handle plugin, int num_params)
+{
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) == plugin)
+		{
+			_plugins.Erase(i);
+			break;
+		}
+	}
+	return 0; // void
 }
 
 public int DeadTools_GetApiVersion(Handle plugin, int num_params)
@@ -138,14 +185,106 @@ stock int ToggleBitFlag(int flags, int flag, bool enabled)
 	return enabled ? flags | flag : flags & ~flag;
 }
 
+static void AddFlag(const int[] clients, int n_clients, int flag,
+	Handle plugin=INVALID_HANDLE)
+{
+	if (n_clients == 0)
+	{
+		return;
+	}
+	int n_plugins = _plugins.Length;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		if (_plugins.Get(i) != plugin && plugin != INVALID_HANDLE)
+		{
+			continue;
+		}
+
+		any bits[DT_BLOCKSIZE];
+		for (int j = 0; j < n_clients; ++j)
+		{
+			// Total flags of all DeadTools plugins, for fast reading
+			_flags[clients[j]] |= flag;
+
+			if (plugin != INVALID_HANDLE)
+			{
+				// Store the bits to plugin-specific container,
+				// so we can keep track of which plugin wants which flags.
+				_plugins.GetArray(i, bits);
+				if (!(bits[clients[j] - 1] & flag))
+				{
+					bits[clients[j] - 1] |= flag;
+					_plugins.SetArray(i, bits);
+				}
+			}
+		}
+		return;
+	}
+	ThrowNativeError(1, "Plugin is not registered for DeadTools");
+}
+
+static void ClearFlag(const int[] clients, int n_clients, int flag,
+	Handle plugin=INVALID_HANDLE)
+{
+	if (n_clients == 0)
+	{
+		return;
+	}
+	int n_plugins = _plugins.Length;
+	any bits[DT_BLOCKSIZE];
+	bool clear_global_flags = true;
+	bool found_plugin;
+	for (int i = 0; i < n_plugins; ++i)
+	{
+		_plugins.GetArray(i, bits);
+		if (bits[0] != plugin)
+		{
+			continue;
+		}
+		found_plugin = true;
+
+		for (int j = 0; j < n_clients; ++j)
+		{
+			if (bits[clients[j] - 1] & flag)
+			{
+				bits[clients[j] - 1] &= ~flag;
+				clear_global_flags = false;
+			}
+		}
+		if (!clear_global_flags)
+		{
+			_plugins.SetArray(i, bits);
+			return;
+		}
+	}
+	if (clear_global_flags)
+	{
+		for (int j = 0; j < n_clients; ++j)
+		{
+			_flags[clients[j]] &= ~flag;
+		}
+	}
+	if (!found_plugin)
+	{
+		ThrowNativeError(1, "Plugin is not registered for DeadTools");
+	}
+}
+
 public int DeadTools_SetIsDownable(Handle plugin, int num_params)
 {
-	int client = GetNativeCell(1);
-	CheckNativeClientValidity(client);
+	int clients[1];
+	clients[0] = GetNativeCell(1);
+	CheckNativeClientValidity(clients[0]);
 	bool enabled = GetNativeCell(2);
 	int flag = DEADTOOLS_FLAG_DOWNABLE;
-	_flags[client] = enabled ? (_flags[client] | flag) : (_flags[client] & ~flag);
-
+	if (enabled)
+	{
+		AddFlag(clients, sizeof(clients), flag, plugin);
+	}
+	else
+	{
+		ClearFlag(clients, sizeof(clients), flag, plugin);
+	}
 	return 0; // void
 }
 
@@ -181,31 +320,25 @@ void InitGameData()
 	CloseHandle(gd);
 }
 
-public void OnAllPluginsLoaded()
-{
-	InitGameData();
-
-#if !defined(SUPPORTS_DROP_BYPASSHOOKS)
-	g_hForwardDrop = CreateGlobalForward("OnGhostDrop", ET_Event, Param_Cell);
-#endif
-
-	if (!HookEventEx("game_round_start", OnRoundStart))
-	{
-		SetFailState("Failed to hook event");
-	}
-}
-
 public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
+	int clients[NEO_MAXPLAYERS];
+	int n;
 	for (int client = 1; client <= MaxClients; ++client)
 	{
-		_flags[client] &= ~DEADTOOLS_FLAG_DOWN;
+		if (IsClientInGame(client) && !IsFakeClient(client))
+		{
+			clients[n++] = client;
+		}
 	}
+	ClearFlag(clients, n, DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnClientDisconnect_Post(int client)
 {
-	_flags[client] &= ~DEADTOOLS_FLAG_DOWN;
+	int clients[1];
+	clients[0] = client;
+	ClearFlag(clients, sizeof(clients), DEADTOOLS_FLAG_DOWN);
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
@@ -308,6 +441,7 @@ void DropWeapon(int client, int weapon)
 	}
 	else
 	{
+#define SF_NORESPAWN (1 << 30)
 		// Because SDKHooks drop bypasses this NT flag
 		SetEntProp(weapon, Prop_Data, "m_spawnflags",
 			GetEntProp(weapon, Prop_Data, "m_spawnflags") | SF_NORESPAWN
@@ -455,6 +589,7 @@ public MRESReturn PlayerKilled(int client, DHookReturn hReturn, DHookParam hPara
 
 void SetInvisible(int client, bool is_invisible)
 {
+#define EF_NODRAW 0x20
 	if (is_invisible)
 	{
 		SetEntProp(client, Prop_Send, "m_fEffects",
@@ -494,6 +629,11 @@ static void Revive(int client)
 	SDKCall(call, client);
 	_is_reviving = false;
 
+#define LIFE_ALIVE 0
+#define OBS_MODE_NONE 0
+#define DAMAGE_YES 2
+#define TRAIN_NEW 0xc0
+#define SOLID_BBOX 2
 	SetEntProp(client, Prop_Send, "m_iObserverMode", OBS_MODE_NONE);
 	SetEntProp(client, Prop_Send, "m_iHealth", 100);
 	SetEntProp(client, Prop_Send, "m_lifeState", LIFE_ALIVE);

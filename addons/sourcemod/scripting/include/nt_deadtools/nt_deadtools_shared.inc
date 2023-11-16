@@ -4,7 +4,7 @@
 #endif
 #define _nt_deadtools_shared_included_
 
-#define DEADTOOLS_VER_MAJOR 1
+#define DEADTOOLS_VER_MAJOR 2
 #define DEADTOOLS_VER_MINOR 0
 
 /// NT_DEADTOOLS bit flags
