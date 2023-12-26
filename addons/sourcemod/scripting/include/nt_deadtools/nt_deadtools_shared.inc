@@ -9,7 +9,7 @@
 
 /// NT_DEADTOOLS bit flags
 ///
-// Client is "downed". This is a special state used by nt_respawns to place
+// Client is "downed". This is a special state used by nt_deadtools to place
 // the player in limbo between being fully dead or alive.
 // This state manipulation is required to make the player revivable for that round.
 #define DEADTOOLS_FLAG_DOWN		(1 << 0)
